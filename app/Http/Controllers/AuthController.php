@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VerificationEmail;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -29,15 +31,26 @@ class AuthController extends Controller
             ], 400);
         }
 
+        //add checking numeric in name
+        if (preg_match('~[0-9]+~', $request->input('name'))) {
+            return response()->json([
+                'message' => 'Please enter a valid name. Name can\'t contain numbers.',
+            ], 400);
+        }
+
         try {
+            $token = base64_encode($request->input('email') . '#' . Str::random(12) . time());
             $user = new User();
             $user->email = $request->input('email');
             $user->name = $request->input('name');
             $user->password = Hash::make($request->input('password'));
+            $user->verification_token = $token;
+            $user->verification_token_expired = date('Y-m-d H:i:s', time() + (1 * 60 * 60));
             $user->save();
 
+            Mail::to($request->input('email'))->send(new VerificationEmail($user->name, $token));
             return response()->json([
-                'message' => 'Register Success',
+                'message' => 'Please check your Inbox / Spam / Promotions / Social tabs and click the activation link. If you can\'t find the email, try searching "Gows" on your mailbox',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
