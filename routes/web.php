@@ -16,3 +16,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/verification-email/{token}', 'HomeController@verifyEmail')->name('verification-email');
+Route::get('/password-reset/{token}', 'HomeController@passwordReset')->name('password-reset');
+Route::post('/password-reset', 'HomeController@passwordResetSubmit');
