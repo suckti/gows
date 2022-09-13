@@ -13,8 +13,8 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware(['auth:sanctum', 'api'])->group(function(){
+    Route::get('profile', 'HomeController@profile');
 });
 // Route::prefix('auth')->group(function(){
 //     Route::post('register', function() {
@@ -24,6 +24,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('register', 'AuthController@register');
     Route::post('login', 'AuthController@login');
+    Route::post('logout', 'AuthController@logout')->middleware('auth:sanctum');
+    Route::post('forgot-password', 'AuthController@forgotPassword');
 });
 
 

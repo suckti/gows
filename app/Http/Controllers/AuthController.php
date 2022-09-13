@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\VerificationEmail;
+use App\Mail\ForgotPassword;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class AuthController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'email' => 'required',
+                'email' => 'required|email',
                 'password' => 'required',
                 'name' => 'required'
             ]
@@ -46,6 +47,7 @@ class AuthController extends Controller
             $user->password = Hash::make($request->input('password'));
             $user->verification_token = $token;
             $user->verification_token_expired = date('Y-m-d H:i:s', time() + (1 * 60 * 60));
+            $user->status = 'pending';
             $user->save();
 
             Mail::to($request->input('email'))->send(new VerificationEmail($user->name, $token));
@@ -64,8 +66,9 @@ class AuthController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'email' => 'required',
+                'email' => 'required|email',
                 'password' => 'required',
+                'device_name' => 'required'
             ]
         );
 
@@ -81,13 +84,8 @@ class AuthController extends Controller
                 'message' => 'Invalid login detail!',
             ], 401);
         }
-        // $credentials = $request->only('email', 'password');
-        // if (Auth::attempt($credentials)){
-        //     return response()->json([
-        //         'message' => 'sakses',
-        //     ], 200);
-        // }
-        $token = $user->createToken('iphone11')->plainTextToken;
+
+        $token = $user->createToken($request->device_name)->plainTextToken;
         return response()->json([
             'message' => 'Successfully login',
             'data' => [
@@ -96,8 +94,55 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function checkUser(Request $request) {
-        echo 'test';exit();
-        print_r($request->user());
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        $user->tokens()->delete();
+        return response()->json([
+            'message' => 'Successfully logout',
+            'data' => []
+        ], 200);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|email',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'data' => null,
+            ], 400);
+        }
+
+        try {
+            $token = base64_encode($request->input('email') . '#' . microtime());
+            $user = User::where([
+                ['email', '=', $request->input('email')],
+            ])->first();
+            if (empty($user)) {
+                return response()->json([
+                    'message' => 'User with email ' . $request->input('email') . ' not found.',
+                ], 400);
+            }
+
+            Mail::to($request->input('email'))->send(new ForgotPassword($user->name, $token));
+            $user->forgot_token = $token;
+            $user->forgot_token_expired = date('Y-m-d H:i:s', time() + (1 * 60 * 60));
+            $user->save();
+
+            return response()->json([
+                'message' => 'Please check your inbox at ' . $request->input('email') . ' to proceed.',
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
     }
 }
