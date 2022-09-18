@@ -84,8 +84,9 @@ class AuthController extends Controller
                 'message' => 'Invalid login detail!',
             ], 401);
         }
-
-        $token = $user->createToken($request->device_name)->plainTextToken;
+        
+        $deviceName = ($request->device_name) ? $request->device_name : 'undefined-model';
+        $token = $user->createToken($deviceName)->plainTextToken;
         return response()->json([
             'message' => 'Successfully login',
             'data' => [
