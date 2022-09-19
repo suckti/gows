@@ -40,6 +40,13 @@ class AuthController extends Controller
         }
 
         try {
+            $existingUser = User::where('email', '=', $request->input('email'))->first();
+            if ($existingUser !== null) {
+                return response()->json([
+                    'message' => 'Email already been used !',
+                ], 400);
+            }
+
             $token = base64_encode($request->input('email') . '#' . Str::random(12) . time());
             $user = new User();
             $user->email = $request->input('email');
@@ -51,8 +58,14 @@ class AuthController extends Controller
             $user->save();
 
             Mail::to($request->input('email'))->send(new VerificationEmail($user->name, $token));
+
+            $deviceName = ($request->device_name) ? $request->device_name : 'undefined-model';
+            $token = $user->createToken($deviceName)->plainTextToken;
             return response()->json([
                 'message' => 'Please check your Inbox / Spam / Promotions / Social tabs and click the activation link. If you can\'t find the email, try searching "Gows" on your mailbox',
+                'data' => [
+                    'access_token' => $token
+                ]
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -84,7 +97,7 @@ class AuthController extends Controller
                 'message' => 'Invalid login detail!',
             ], 401);
         }
-        
+
         $deviceName = ($request->device_name) ? $request->device_name : 'undefined-model';
         $token = $user->createToken($deviceName)->plainTextToken;
         return response()->json([
