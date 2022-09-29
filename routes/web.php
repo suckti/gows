@@ -19,3 +19,4 @@ Route::get('/', function () {
 Route::get('/verification-email/{token}', 'HomeController@verifyEmail')->name('verification-email');
 Route::get('/password-reset/{token}', 'HomeController@passwordReset')->name('password-reset');
 Route::post('/password-reset', 'HomeController@passwordResetSubmit');
+Route::get('/exchange-token/{id}', 'StravaController@exchangeToken');

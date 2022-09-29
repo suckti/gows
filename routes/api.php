@@ -15,6 +15,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 */
 Route::middleware(['auth:sanctum', 'api'])->group(function(){
     Route::get('profile', 'HomeController@profile');
+    Route::post('post-activity', 'StravaController@saveActivity');
 });
 // Route::prefix('auth')->group(function(){
 //     Route::post('register', function() {
