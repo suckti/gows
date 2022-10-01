@@ -12,7 +12,6 @@ class HomeController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user();
-        echo '<pre>';print_r($user);exit();
         $data = [
             'name' => $user->name,
             'email' => $user->email

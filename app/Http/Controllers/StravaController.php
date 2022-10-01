@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use Illuminate\Http\Request;
 
 use App\Models\User;
 
 class StravaController extends Controller
 {
+    use StravaTrait;
+
     public function exchangeToken(Request $request, $id)
     {
         $user = User::find($id);
@@ -25,63 +28,45 @@ class StravaController extends Controller
         if (empty($parseScope)) {
             return view('strava/failed', ['message' => 'You must authorize the scope']);
         }
-        if (!in_array('read_all', $parseScope)) {
-            return view('strava/failed', ['message' => 'You must authorize the scope']);
-        }
 
         if (empty($code)) {
             return view('strava/failed', ['message' => 'Undefined authorization code']);
         }
 
-        try {
-            $curl = curl_init();
-            curl_setopt_array($curl, [
-                CURLOPT_URL => 'https://www.strava.com/oauth/token',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => [
-                    'client_id' => env('STRAVA_CLIENT_ID'),
-                    'client_secret' => env('STRAVA_CLIENT_SECRET'),
-                    'code' => $code,
-                    'grant_type' => 'authorization_code'
-                ]
-            ]);
+        $requestExchange = $this->exchangeTokenRequest($code);
+        $httpCode = $requestExchange['httpCode'];
+        $data = $requestExchange['data'];
 
-            $response = curl_exec($curl);
-            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            $data = json_decode($response);
-            curl_close($curl);
-            if ($httpCode == 200) {
+        if ($httpCode == null) {
+            return view('strava/failed', ['message' => 'Failed to get token.']);
+        }
+        if ($httpCode == 200) {
+            try {
                 $user->strava_athlete_id = $data->athlete->id;
                 $user->strava_token = $data->access_token;
                 $user->strava_refresh_token = $data->refresh_token;
                 $user->strava_expires_at = $data->expires_at;
                 $user->save();
                 return view('strava/success', ['message' => 'Success connect to Strava, you can go back to App.']);
-            } else {
-                $failedMessage = 'Failed: ' . $data->message . ' Please revoke the app access on strava and try it again!';
+            } catch (\Exception $e) {
+                $failedMessage = 'Failed: Update User. Please revoke the app access on strava and try it again!';
                 return view('strava/failed', ['message' => $failedMessage]);
             }
-            // invalid response
-            // {"message":"Authorization Error","errors":[{"resource":"Application","field":"","code":"invalid"}]}
-            // success response
-            // {"token_type":"Bearer","expires_at":1664233221,"expires_in":21600,"refresh_token":"8d016910f17c460f9f3276a333d45f4c568cc5e7","access_token":"c2fea0967afa2feec760a73e443a9ec3be59658a","athlete":{"id":18067797,"username":"wsakti","resource_state":2,"firstname":"Wira","lastname":"Sakti","bio":"","city":"Bandung","state":"West Java","country":"Indonesia","sex":"M","premium":false,"summit":false,"created_at":"2016-10-16T11:15:04Z","updated_at":"2022-09-23T04:16:58Z","badge_type_id":0,"weight":58.0,"profile_medium":"https://dgalywyr863hv.cloudfront.net/pictures/athletes/18067797/6365879/6/medium.jpg","profile":"https://dgalywyr863hv.cloudfront.net/pictures/athletes/18067797/6365879/6/large.jpg","friend":null,"follower":null}}
-
-            // save the response to database
-        } catch (\Exception $e) {
-            return view('strava/failed', ['message' => 'Failed to get token.']);
+        } else {
+            $failedMessage = 'Failed: ' . $data->message . ' Please revoke the app access on strava and try it again!';
+            return view('strava/failed', ['message' => $failedMessage]);
         }
     }
 
     public function saveActivity(Request $request)
     {
         $user = $request->user();
-        $athleteId = $user->athlete_id;
+        $athleteId = $user->strava_athlete_id;
         $stravaToken = $user->strava_token;
         $stravaRefreshToken = $user->strava_refresh_token;
         $stravaTokenExpiresAt = $user->strava_expires_at;
-
-        if ($athleteId == null || $stravaRefreshToken == null) {
+        $activityId = $request->input('activityId');
+        if ($athleteId == null || $stravaToken == null) {
             return response()->json([
                 'message' => 'Strava token undefined',
             ], 400);
@@ -89,9 +74,71 @@ class StravaController extends Controller
 
         if (time() > $stravaTokenExpiresAt) {
             //request new token
-            $stravaToken = 'newtoken';
+            $requestNewToken = $this->refreshTokenRequest($stravaRefreshToken);
+            $httpCode = $requestNewToken['httpCode'];
+            $data = $requestNewToken['data'];
+
+            if ($httpCode == null) {
+                return response()->json([
+                    'message' => 'Strava token expired. Request new token failed!',
+                ], 400);
+            }
+
+            if ($httpCode != 200) {
+                return response()->json([
+                    'message' => 'Strava token expired. ' . $data->message
+                ], 400);
+            }
+
+            $stravaToken = $data->access_token;
+            $user = User::find($user->id);
+            try {
+                $user->strava_token = $data->access_token;
+                $user->strava_refresh_token = $data->refresh_token;
+                $user->strava_expires_at = $data->expires_at;
+                $user->save();
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Strava token expired. Failed save new token!'
+                ], 500);
+            }
         }
 
-        //request 
+        //request activity
+        $getActivity = $this->getNewActivity($stravaToken, $activityId);
+        if ($getActivity['status'] == false) {
+            return response()->json([
+                'message' => 'Failed get activity. ' . $getActivity['data']['message']
+            ], 500);
+        }
+
+        if ($getActivity['httpCode'] != 200) {
+            $data = json_decode($getActivity['data']);
+            return response()->json([
+                'message' => 'Failed get activity. ' . $data->message
+            ], 500);
+        }
+
+        $activity = Activity::find($activityId);
+        if ($activity != null) {
+            return response()->json([
+                'message' => 'Activity already exist !'
+            ], 200);
+        }
+
+        try {
+            $activity = new Activity();
+            $activity->user_id = $user->id;
+            $activity->strava_id = $activityId;
+            $activity->strava_data = $getActivity['data'];
+            $activity->save();
+            return response()->json([
+                'message' => 'Success add activity !'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed add activity ! '. $e->getMessage()
+            ], 500);
+        }
     }
 }
