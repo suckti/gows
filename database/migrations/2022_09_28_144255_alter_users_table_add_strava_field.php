@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('user', function (Blueprint $table) {
-            $table->integer('strava_athlete_id')->nullable();
+            $table->unsignedBigInteger('strava_athlete_id')->nullable();
             $table->string('strava_token', 255)->nullable();
             $table->string('strava_refresh_token', 255)->nullable();
             $table->integer('strava_expires_at')->nullable();

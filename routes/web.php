@@ -20,3 +20,5 @@ Route::get('/verification-email/{token}', 'HomeController@verifyEmail')->name('v
 Route::get('/password-reset/{token}', 'HomeController@passwordReset')->name('password-reset');
 Route::post('/password-reset', 'HomeController@passwordResetSubmit');
 Route::get('/exchange-token/{id}', 'StravaController@exchangeToken');
+Route::get('/strava-webhook', 'StravaController@webhookValidation');
+Route::post('/strava-webhook', 'StravaController@webhookEvent');

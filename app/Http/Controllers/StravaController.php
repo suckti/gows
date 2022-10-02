@@ -119,7 +119,7 @@ class StravaController extends Controller
             ], 500);
         }
 
-        $activity = Activity::find($activityId);
+        $activity = Activity::where('strava_id', '=', $activityId)->first();
         if ($activity != null) {
             return response()->json([
                 'message' => 'Activity already exist !'
@@ -137,8 +137,29 @@ class StravaController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed add activity ! '. $e->getMessage()
+                'message' => 'Failed add activity ! ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function webhookValidation(Request $request)
+    {
+        $hubChallenge = $request->input('hub_challenge');
+        $hubVerifyToken = $request->input('hub_verify_token');
+
+        $appToken = env('STRAVA_VERIFY_TOKEN');
+        if ($hubVerifyToken != $appToken){
+            return response()->json([
+                'message' => 'App token not valid'
+            ], 400);
+        }
+
+        return response()->json([
+            'hub.challenge' => $hubChallenge
+        ], 200);
+    }
+
+    public function webhookEvent(Request $request)
+    {
     }
 }
