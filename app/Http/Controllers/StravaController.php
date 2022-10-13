@@ -6,7 +6,7 @@ use App\Models\Activity;
 use Illuminate\Http\Request;
 
 use App\Models\User;
-
+use App\Models\Log;
 class StravaController extends Controller
 {
     use StravaTrait;
@@ -161,5 +161,28 @@ class StravaController extends Controller
 
     public function webhookEvent(Request $request)
     {
+        $data = [
+            'type' => 'strava-event',
+            'event' => $request->input('object_type'),
+            'content' => json_encode($request->all()),
+            'created_at' => date('Y-m-d h:i:s'),
+            'updated_at' => date('Y-m-d h:i:s'),
+        ];
+        Log::insert($data);
+
+        $objectType = $request->input('object_type'); //activity or athlete
+        $aspectType = $request->input('aspect_type'); //create, update, or delete
+        $objectId = $request->input('object_id'); //activity id or athletes id
+
+        if ($objectType == null) {
+            return response()->json([
+                'success' => false
+            ], 400);    
+        }
+
+        return response()->json([
+            'success' => true
+        ], 200);
+
     }
 }
