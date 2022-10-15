@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\StravaEvent;
 use App\Models\Activity;
 use Illuminate\Http\Request;
 
@@ -169,10 +170,10 @@ class StravaController extends Controller
             'updated_at' => date('Y-m-d h:i:s'),
         ];
         Log::insert($data);
-
         $objectType = $request->input('object_type'); //activity or athlete
-        $aspectType = $request->input('aspect_type'); //create, update, or delete
-        $objectId = $request->input('object_id'); //activity id or athletes id
+
+        /**note: must response under 2 second to strava. process the data asynchronous with event */
+        StravaEvent::dispatch($request->all());
 
         if ($objectType == null) {
             return response()->json([
