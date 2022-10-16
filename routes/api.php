@@ -15,13 +15,17 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 */
 Route::middleware(['auth:sanctum', 'api'])->group(function(){
     Route::get('profile', 'HomeController@profile');
-    Route::post('post-activity', 'StravaController@saveActivity');
+    Route::post('activity', 'StravaController@saveActivity');
+
+    //Challenge
+    Route::post('challenge', 'ChallengeController@save');
+    Route::put('challenge/{id}', 'ChallengeController@edit');
+    Route::delete('challenge/{id}', 'ChallengeController@delete');
+    Route::get('challenge/{id}', 'ChallengeController@detail');
+    Route::post('challenge/athlete/{id}', 'ChallengeController@athleteAdd');
+    Route::post('challenge/athlete/request/{id}', 'ChallengeController@athleteRequest');
 });
-// Route::prefix('auth')->group(function(){
-//     Route::post('register', function() {
-//         return 'test';
-//     });
-// });
+
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('register', 'AuthController@register');
     Route::post('login', 'AuthController@login');
@@ -29,4 +33,9 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('forgot-password', 'AuthController@forgotPassword');
 });
 
+// Route::prefix('auth')->group(function(){
+//     Route::post('register', function() {
+//         return 'test';
+//     });
+// });
 
