@@ -13,7 +13,8 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::middleware(['auth:sanctum', 'api'])->group(function(){
+
+Route::middleware(['auth:sanctum', 'api'])->group(function () {
     Route::get('profile', 'HomeController@profile');
     Route::post('activity', 'StravaController@saveActivity');
 
@@ -22,8 +23,9 @@ Route::middleware(['auth:sanctum', 'api'])->group(function(){
     Route::put('challenge/{id}', 'ChallengeController@edit');
     Route::delete('challenge/{id}', 'ChallengeController@delete');
     Route::get('challenge/{id}', 'ChallengeController@detail');
-    Route::post('challenge/athlete/{id}', 'ChallengeController@athleteAdd');
-    Route::post('challenge/athlete/request/{id}', 'ChallengeController@athleteRequest');
+    Route::get('challenge', 'ChallengeController@list');
+    Route::post('challenge/athlete/add', 'ChallengeController@athleteAdd');
+    Route::delete('challenge/athlete/delete', 'ChallengeController@athleteDelete');
 });
 
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
@@ -38,4 +40,3 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
 //         return 'test';
 //     });
 // });
-

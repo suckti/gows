@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Challenge;
+use App\Models\ChallengeUser;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -187,11 +188,115 @@ class ChallengeController extends Controller
         ], 200);
     }
 
-    public function athleteAdd(Request $request, $id)
+    public function list()
     {
+        //TODO: paginate the response
+        $challenge = Challenge::all();
+        return response()->json([
+            'data' => $challenge,
+            'message' => 'Challenge List'
+        ], 200);
     }
 
-    public function athleteRequest(Request $request, $id)
+    public function athleteAdd(Request $request)
     {
+        $input = $request->all();
+        $user = $request->user();
+
+        $validator = Validator::make(
+            $input,
+            [
+                'challenge_id' => 'required',
+            ]
+        );
+
+        $challengeId = $input['challenge_id'];
+        $type = $input['type']; //'request' / 'add'
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'data' => null,
+            ], 400);
+        }
+
+        $challenge = Challenge::find($challengeId);
+        $alreadyJoin = ChallengeUser::where('challenge_id', '=', $challengeId)
+            ->where('user_id', '=', $user->id)
+            ->first();
+
+        if ($alreadyJoin !== null) {
+            return response()->json([
+                'message' => 'Athlete already join this challenge !'
+            ], 200);
+        }
+
+        try {
+            $challengeUser = new ChallengeUser();
+            $challengeUser->challenge_id = $challengeId;
+            $challengeUser->user_id = $user->id;
+            $status = 'requested';
+            if ($type == 'add' || $user->id == $challenge->user_id) {
+                $status = 'approved';
+            }
+            $challengeUser->status = $status;
+            $challengeUser->save();
+            return response()->json([
+                'message' => 'Request sent !'
+            ], 200);
+        } catch (Exception $e) {
+            Log::info('save-challenge-user', ['msg' => $e->getMessage()]);
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function athleteDelete(Request $request)
+    {
+        $input = $request->all();
+        $user = $request->user();
+
+        $validator = Validator::make(
+            $input,
+            [
+                'challenge_id' => 'required',
+                'user_id' => 'required'
+            ]
+        );
+
+        $challengeId = $input['challenge_id'];
+        $userId = $input['user_id'];
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'data' => null,
+            ], 400);
+        }
+
+        $challenge = Challenge::find($challengeId);
+        if ($user->id !== $challenge->user_id) {
+            return response()->json([
+                'message' => 'Delete failed. You are not admin this challenge!',
+            ], 400);
+        }
+
+        try {
+            $challengeUser = ChallengeUser::where('challenge_id', '=', $challengeId)
+                ->where('user_id', '=', $userId)
+                ->first();
+            if ($challengeUser !== null) {
+                $challengeUser->delete();
+            }
+
+            return response()->json([
+                'message' => 'Athlete remove from this challenge!'
+            ], 200);
+        } catch (Exception $e) {
+            Log::info('save-challenge-user', ['msg' => $e->getMessage()]);
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
