@@ -164,20 +164,12 @@ class ChallengeController extends Controller
 
     public function detail(Request $request, $id)
     {
-        $user = $request->user();
         $challenge = Challenge::find($id);
         if ($challenge == null || $challenge->deleted == 1) {
             return response()->json([
                 'message' => 'Challenge not found !',
                 'data' => null,
             ], 400);
-        }
-
-        if ($challenge->user_id != $user->id) {
-            return response()->json([
-                'message' => 'You don\'t have permission to access this challenge !',
-                'data' => null,
-            ], 403);
         }
 
         $challenge->elevation_point = json_decode($challenge->elevation_point);

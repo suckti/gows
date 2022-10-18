@@ -26,6 +26,13 @@ Route::middleware(['auth:sanctum', 'api'])->group(function () {
     Route::get('challenge', 'ChallengeController@list');
     Route::post('challenge/athlete/add', 'ChallengeController@athleteAdd');
     Route::delete('challenge/athlete/delete', 'ChallengeController@athleteDelete');
+
+    //Group
+    Route::post('challenge/group', 'ChallengeGroupController@save');
+    Route::put('challenge/group/{id}', 'ChallengeGroupController@edit');
+    Route::delete('challenge/group/{id}', 'ChallengeGroupController@delete');
+    Route::get('challenge/group/{id}', 'ChallengeGroupController@detail');
+    Route::get('challenge/group-list/{challengeId}', 'ChallengeGroupController@list');
 });
 
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
