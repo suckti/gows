@@ -14,4 +14,9 @@ class GroupUser extends Model
      * @var array
      */
     protected $fillable = [];
+
+    public function challengegroup()
+    {
+        return $this->belongsTo(ChallengeGroup::class, 'group_id');
+    }
 }
