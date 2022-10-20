@@ -13,11 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('activity', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->json('strava_data');
-            $table->timestamps();
+        Schema::table('challenge', function (Blueprint $table) {
+            $table->string('sport_type', 255)->after('group_type');
         });
     }
 
@@ -28,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('activity');
+        Schema::table('challenge', function (Blueprint $table) {
+            $table->dropColumn('sport_type');
+        });
     }
 };
