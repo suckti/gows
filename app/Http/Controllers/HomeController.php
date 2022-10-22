@@ -13,6 +13,7 @@ class HomeController extends Controller
     {
         $user = $request->user();
         $data = [
+            'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email
         ];
