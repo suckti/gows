@@ -22,6 +22,7 @@ Route::get('/', function () {
 });
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'loginSubmit']);
 Route::post('/login-by-strava', [AuthController::class, 'loginByStrava'])->name('login-by-strava');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/verification-email/{token}', [HomeController::class, 'verifyEmail'])->name('verification-email');

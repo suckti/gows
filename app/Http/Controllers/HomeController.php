@@ -10,7 +10,6 @@ class HomeController extends Controller
 
         //get authenticated user
         $user = $request->user();
-        print_r($user);exit();
         return view('home');
     }
 }

@@ -21,7 +21,6 @@
     <link rel="stylesheet" href="{{asset('vendor/font-awesome/css/all.min.css')}}" />
     <link rel="stylesheet" href="{{asset('vendor/boxicons/css/boxicons.min.css')}}" />
     <link rel="stylesheet" href="{{asset('vendor/magnific-popup/magnific-popup.css')}}" />
-    <link rel="stylesheet" href="{{asset('vendor/bootstrap-datepicker/css/bootstrap-datepicker3.css')}}" />
 
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{{asset('css/theme.css')}}" />
@@ -60,9 +59,9 @@
                     <form action="{{ route('login') }}" method="post">
                         @csrf
                         <div class="form-group mb-3">
-                            <label>Email</label>
+                            <label>Username</label>
                             <div class="input-group">
-                                <input name="email" type="email" class="form-control form-control-lg" />
+                                <input name="username" class="form-control form-control-lg" />
                                 <span class="input-group-text">
                                     <i class="bx bx-user text-4"></i>
                                 </span>
@@ -111,9 +110,10 @@
     <!-- end: page -->
 
     <!-- Vendor -->
+    <script src="{{asset('vendor/jquery/jquery.js')}}"></script>
+    <script src="{{asset('vendor/jquery-browser-mobile/jquery.browser.mobile.js')}}"></script>
     <script src="{{asset('vendor/popper/umd/popper.min.js')}}"></script>
     <script src="{{asset('vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
-    <script src="{{asset('vendor/bootstrap-datepicker/js/bootstrap-datepicker.js')}}"></script>
     <script src="{{asset('vendor/common/common.js')}}"></script>
     <script src="{{asset('vendor/nanoscroller/nanoscroller.js')}}"></script>
 
