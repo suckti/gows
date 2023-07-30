@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StravaController;
+use App\Http\Controllers\HomeController;
+use App\Livewire\SetPassword;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,11 +18,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
-Route::get('/verification-email/{token}', 'HomeController@verifyEmail')->name('verification-email');
-Route::get('/password-reset/{token}', 'HomeController@passwordReset')->name('password-reset');
-Route::post('/password-reset', 'HomeController@passwordResetSubmit');
-Route::get('/exchange-token/{id}', 'StravaController@exchangeToken');
-Route::get('/strava-webhook', 'StravaController@webhookValidation');
-Route::post('/strava-webhook', 'StravaController@webhookEvent');
+
+Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login-by-strava', [AuthController::class, 'loginByStrava'])->name('login-by-strava');
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/verification-email/{token}', [HomeController::class, 'verifyEmail'])->name('verification-email');
+Route::get('/password-reset/{token}', [HomeController::class, 'passwordReset'])->name('password-reset');
+Route::post('/password-reset', [HomeController::class, 'passwordResetSubmit']);
+Route::get('/exchange-token', [StravaController::class, 'exchangeToken']);
+Route::get('/strava-webhook', [StravaController::class, 'webhookValidation']);
+Route::post('/strava-webhook', [StravaController::class, 'webhookEvent']);
+
+Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+Route::get('/set-password', SetPassword::class)->name('set-password');
