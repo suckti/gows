@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\StravaController;
 use App\Http\Controllers\HomeController;
+use App\Livewire\Home;
 use App\Livewire\SetPassword;
 
 /*
@@ -34,3 +36,4 @@ Route::post('/strava-webhook', [StravaController::class, 'webhookEvent']);
 
 Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 Route::get('/set-password', SetPassword::class)->name('set-password');
+Route::get('/challenge', [ChallengeController::class, 'list'])->name('challenge');
