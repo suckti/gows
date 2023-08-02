@@ -183,8 +183,8 @@ class ChallengeController extends Controller
 
     public function list()
     {
-        $challenges = Challenge::all();
-        return view('challenge.list', ['challenges' => $challenges]);
+        
+        return view('challenge.list');
     }
 
     public function athleteAdd(Request $request)
