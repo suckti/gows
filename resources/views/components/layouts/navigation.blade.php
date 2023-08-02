@@ -12,7 +12,7 @@
                 </a>
             </li>
             <li class="">
-                <a class="nav-link" href="{{route('dashboard')}}">
+                <a class="nav-link" href="{{route('activity')}}">
                     <i class="fas fa-list" aria-hidden="true"></i>Activities
                 </a>
             </li>
